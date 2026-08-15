@@ -351,13 +351,12 @@ return {
         }
       }
       const pairs = [
-        ['sidebar', '.pI_x6G_sidebarCol', '--dsw-specific-sidebar-fill'],
-        ['center', '.pI_x6G_centerCol', '--dsw-alias-bg-base'],
-        ['details', '.pI_x6G_detailsCol', '--dsw-alias-bg-base'],
+        ['sidebar', '.pI_x6G_sidebarCol'],
+        ['center', '.pI_x6G_centerCol'],
+        ['details', '.pI_x6G_detailsCol'],
       ]
-      for (const [key, sel, token] of pairs) {
+      for (const [key, sel] of pairs) {
         const r = regions[key]
-        const p = (r && typeof r.panelOpacity === 'number') ? r.panelOpacity : 1
         if (r && r.url) {
           const c = regionCss(r)
           css += sel + '{position:relative;background-image:url("' + r.url + '") !important;background-size:' + c.size + ' !important;background-position:' + c.pos + ' !important;background-repeat:no-repeat !important}'
@@ -365,8 +364,12 @@ return {
             css += sel + '::before{content:"";position:absolute;inset:0;background:var(--dsw-alias-bg-base);opacity:' + (1 - c.opacity) + ';z-index:0;pointer-events:none}'
           }
         }
+        const p = (r && typeof r.panelOpacity === 'number') ? r.panelOpacity : 1
         if (p < 1) {
-          css += sel + '{background-color:color-mix(in srgb,var(' + token + ') ' + Math.round(p * 100) + '%,transparent) !important}'
+          const P = Math.round(p * 100)
+          const sfx = key
+          css += ':root{--bfy-l1-' + sfx + ':color-mix(in srgb,var(--dsw-alias-bg-layer-1) ' + P + '%,transparent) !important;--bfy-l2-' + sfx + ':color-mix(in srgb,var(--dsw-alias-bg-layer-2) ' + P + '%,transparent) !important;--bfy-ov-' + sfx + ':color-mix(in srgb,var(--dsw-alias-bg-overlay) ' + P + '%,transparent) !important;--bfy-sb-' + sfx + ':color-mix(in srgb,var(--dsw-specific-sidebar-fill) ' + P + '%,transparent) !important}'
+          css += sel + '{--dsw-alias-bg-layer-1:var(--bfy-l1-' + sfx + ') !important;--dsw-alias-bg-layer-2:var(--bfy-l2-' + sfx + ') !important;--dsw-alias-bg-overlay:var(--bfy-ov-' + sfx + ') !important;--dsw-specific-sidebar-fill:var(--bfy-sb-' + sfx + ') !important}'
         }
       }
       if (!css) return
