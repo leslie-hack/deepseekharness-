@@ -2,6 +2,16 @@
 
 DeepSeek Harness (DSH) 界面美化插件 — 一键关键词生成整套主题，配合 Bing 壁纸、分区壁纸工作室、色相滑块与 AI 头像图标，把 Harness 的聊天界面变成你自己的风格。
 
+> **English**: [README.en.md](./README.en.md) · **更新记录**: [CHANGELOG.md](./CHANGELOG.md)
+
+## 📸 截图
+
+> 截图占位：请将效果截图放入 [`docs/screenshots/`](./docs/screenshots/)，并以 `01-settings.png`、`02-theme-generator.png`、`03-wallpaper-studio.png`、`04-avatar-logo.png` 命名，即可在此处展示。
+
+| 设置页（色相滑块） | 关键词生成主题 | 壁纸工作室 | AI 头像 + Logo |
+| --- | --- | --- | --- |
+| ![01-settings](docs/screenshots/01-settings.png) | ![02-theme-generator](docs/screenshots/02-theme-generator.png) | ![03-wallpaper-studio](docs/screenshots/03-wallpaper-studio.png) | ![04-avatar-logo](docs/screenshots/04-avatar-logo.png) |
+
 ## ✨ 功能
 
 - **关键词生成整套主题**：输入「我的世界」「高达」「星空」等关键词，自动生成全套配色主题；内置 14 套主题（我的世界 / 高达 / EVA / 赛博朋克 / 暗黑 / 星空 / 樱花 / 森林 / 海洋 / 落日 / 薄荷 / 蒸汽波 / 霓虹 / 午夜），其他任意关键词会按哈希生成专属配色。
@@ -68,11 +78,18 @@ DeepSeek Harness (DSH) 界面美化插件 — 一键关键词生成整套主题�
 
 ```
 dsh-beautify/
-├── package.json          # 插件清单（dsh.client 注入 slots / theme）
+├── package.json              # 插件清单（dsh.client 注入 slots / theme）
 ├── lib/
-│   ├── index.js          # Host 端：/api/bfy-search 接口、Bing 抓取、主题生成
-│   └── client.js         # Client 端：美化设置页、壁纸工作室、头像与 Logo
-└── cordis.patch.example.yml
+│   ├── index.js              # Host 端：/api/bfy-search 接口、Bing 抓取、主题生成
+│   └── client.js             # Client 端：美化设置页、壁纸工作室、头像与 Logo
+├── dynamic/                  # 动态版（cordis_define / cordis_run）
+│   ├── host.js               #   动态版 Host（harness RPC）
+│   ├── client.js             #   动态版 Client
+│   └── README.md             #   动态版安装说明
+├── docs/screenshots/         # 效果截图（占位）
+├── README.en.md              # 英文说明
+├── CHANGELOG.md              # 更新记录
+└── cordis.patch.example.yml  # 部署版安装配置示例
 ```
 
 ## 🗂 API
