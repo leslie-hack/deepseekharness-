@@ -1,0 +1,4 @@
+# cordis.patch.yml 安装示例 —— 将以下内容追加到 <DSH_HOME>/.dsh/profiles/<profile>/cordis.patch.yml 顶层列表
+- insert:
+    - id: beautify
+      name: '@local/dsh-beautify'

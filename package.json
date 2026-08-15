@@ -1,0 +1,22 @@
+{
+  "name": "@local/dsh-beautify",
+  "description": "界面美化：关键词生成主题、Bing 壁纸、分区壁纸工作室、色相滑块、AI 头像图标",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-ui-theme"
+      ]
+    }
+  }
+}
