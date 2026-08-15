@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - 完善英文版 README 与截图占位。
+- **发送键图标**：上传的图标（或独立图标）可替换输入框发送键的默认箭头，一键开关；部署版与动态版同步支持。
 
 ## [0.1.0] - 2025-06-15
 

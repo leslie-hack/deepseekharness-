@@ -112,6 +112,9 @@ return {
     let persistTimer = null
     let restored = false
     let styleDisposer = null
+    let sendIconEnabled = false
+    let sendIconUrl = null
+    let sendIconDisposer = null
     const regions = {
       base: { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1 },
       sidebar: { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1 },
@@ -126,6 +129,7 @@ return {
         current: currentPreset, generated: generated, wallpaper: wallpaper, wallpaperMode: wallpaperMode,
         wallpaperOpacity: wallpaperOpacity, icon: icon, activeRegion: activeRegion, regions: regions,
         hueValue: hueValue, savedPresets: savedPresets, restored: restored,
+        sendIconEnabled: sendIconEnabled, sendIconUrl: sendIconUrl,
       }
     }
     function subscribe(fn) {
@@ -155,6 +159,8 @@ return {
           icon: icon,
           activeRegion: activeRegion,
           regions: regions,
+          sendIconEnabled: sendIconEnabled,
+          sendIconUrl: sendIconUrl,
           generated: generated ? {
             label: generated.label,
             tokens: generated.tokens,
@@ -179,6 +185,8 @@ return {
         wallpaperMode = d.wallpaperMode === 'front' ? 'front' : 'behind'
         icon = d.icon || null
         activeRegion = d.activeRegion || 'center'
+        sendIconEnabled = d.sendIconEnabled === true
+        sendIconUrl = d.sendIconUrl || null
         if (d.regions && typeof d.regions === 'object') {
           for (const k of REGION_KEYS) {
             const r = d.regions[k]
@@ -204,6 +212,7 @@ return {
         const anyUrl = REGION_KEYS.some(function (k) { return regions[k] && regions[k].url })
         wallpaper = anyUrl ? { url: regions.base.url || regions.center.url || regions.sidebar.url || regions.details.url, opacity: wallpaperOpacity } : null
         syncBackdrop()
+        syncSendIcon()
         applyTokens(presetTokens(currentPreset))
         restored = true
       } catch (e) { restored = true; /* 损坏数据静默忽略 */ }
@@ -223,9 +232,12 @@ return {
       icon = null
       activeRegion = 'center'
       generated = null
+      sendIconEnabled = false
+      sendIconUrl = null
       for (const k of REGION_KEYS) regions[k] = { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1 }
       if (currentDisposer) { currentDisposer(); currentDisposer = null }
       if (backdropDisposer) { backdropDisposer(); backdropDisposer = null }
+      if (sendIconDisposer) { sendIconDisposer(); sendIconDisposer = null }
       currentTokens = null
       emitChange()
     }
@@ -356,6 +368,32 @@ return {
         backdropDisposer = styles.insert(css)
       } catch (e) { backdropDisposer = null }
     }
+    function effectiveSendIcon() {
+      if (!sendIconEnabled) return null
+      if (sendIconUrl) return sendIconUrl
+      return icon || null
+    }
+    function syncSendIcon() {
+      if (sendIconDisposer) { sendIconDisposer(); sendIconDisposer = null }
+      const src = effectiveSendIcon()
+      if (!src) return
+      const css =
+        '.uV2eYG_primary[aria-label="发送消息"],.uV2eYG_primary[aria-label="Send message"]{background-image:url("' + src + '") !important;background-size:18px 18px !important;background-position:center !important;background-repeat:no-repeat !important}' +
+        '.uV2eYG_primary[aria-label="发送消息"] svg,.uV2eYG_primary[aria-label="Send message"] svg{display:none !important}'
+      try {
+        sendIconDisposer = styles.insert(css)
+      } catch (e) { sendIconDisposer = null }
+    }
+    function setSendIconEnabled(v) {
+      sendIconEnabled = v === true
+      syncSendIcon()
+      emitChange()
+    }
+    function setSendIconUrl(url) {
+      sendIconUrl = url ? String(url) : null
+      syncSendIcon()
+      emitChange()
+    }
     function applyPreset(id) {
       currentPreset = id
       applyTokens(presetTokens(id))
@@ -456,6 +494,7 @@ return {
     }
     function clearIcon() {
       icon = null
+      syncSendIcon()
       emitChange()
     }
 
@@ -587,6 +626,7 @@ return {
     ctx.on('dispose', function () {
       if (currentDisposer) { currentDisposer(); currentDisposer = null }
       if (backdropDisposer) { backdropDisposer(); backdropDisposer = null }
+      if (sendIconDisposer) { sendIconDisposer(); sendIconDisposer = null }
       if (styleDisposer) { styleDisposer(); styleDisposer = null }
       if (persistTimer) { persistTimer(); persistTimer = null }
       listeners.clear()
@@ -671,7 +711,14 @@ return {
           const f = e && e.target && e.target.files && e.target.files[0]
           if (!f) return
           readFileAsDataURL(f, function (url) {
-            if (url) { icon = url; emitChange() }
+            if (url) { icon = url; syncSendIcon(); emitChange() }
+          })
+        }
+        const onSendIconFile = function (e) {
+          const f = e && e.target && e.target.files && e.target.files[0]
+          if (!f) return
+          readFileAsDataURL(f, function (url) {
+            if (url) { sendIconEnabled = true; sendIconUrl = url; syncSendIcon(); emitChange() }
           })
         }
 
@@ -883,6 +930,23 @@ return {
           React.createElement('div', { className: 'bfy-hint' }, '上传的图标将显示为：① 每条 AI 回复旁的头像徽章；② 会话标题栏右侧的 logo。')
         )
 
+        const sendSection = React.createElement('div', { className: 'bfy-upload' },
+          React.createElement('div', { className: 'bfy-upload-row' },
+            React.createElement('span', { className: 'bfy-studio-label' }, '发送键图标'),
+            React.createElement('button', {
+              className: 'bfy-btn bfy-btn-sm' + (s.sendIconEnabled ? '' : ' bfy-btn-ghost'),
+              onClick: function () { setSendIconEnabled(!s.sendIconEnabled) },
+            }, s.sendIconEnabled ? '已开启' : '已关闭'),
+            (s.sendIconEnabled && effectiveSendIcon()) ? React.createElement('span', { className: 'bfy-thumb', style: { backgroundImage: 'url("' + effectiveSendIcon() + '")' } }) : null
+          ),
+          s.sendIconEnabled ? React.createElement('div', { className: 'bfy-upload-row' },
+            React.createElement('label', { className: 'bfy-upload-label bfy-btn-sm' }, '上传发送键图标', React.createElement('input', { type: 'file', className: 'bfy-file', accept: 'image/*', onChange: onSendIconFile })),
+            React.createElement('button', { className: 'bfy-btn bfy-btn-sm bfy-btn-ghost', onClick: function () { sendIconUrl = null; syncSendIcon(); emitChange() } }, '跟随 AI 头像图标'),
+            s.sendIconUrl ? React.createElement('button', { className: 'bfy-btn bfy-btn-sm bfy-btn-ghost', onClick: function () { sendIconEnabled = false; sendIconUrl = null; syncSendIcon(); emitChange() } }, '关闭发送键图标') : null
+          ) : null,
+          React.createElement('div', { className: 'bfy-hint' }, s.sendIconEnabled ? '发送键将显示为你上传的图标；默认跟随 AI 头像图标，可上传独立图标。' : '开启后发送键由默认箭头替换为你上传的图标。')
+        )
+
         const resetSection = React.createElement('div', { className: 'bfy-upload' },
           React.createElement('div', { className: 'bfy-upload-row' },
             React.createElement('button', { className: 'bfy-btn bfy-btn-sm bfy-btn-ghost', onClick: resetAll }, '重置全部设置（清除保存）'),
@@ -897,6 +961,7 @@ return {
           genSection,
           studio,
           uploadSection,
+          sendSection,
           resetSection,
           savedNodes.length ? React.createElement('div', { className: 'bfy-grid' }, savedNodes) : null,
           React.createElement('div', { className: 'bfy-grid' }, presetNodes)
