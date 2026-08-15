@@ -11,9 +11,11 @@ DeepSeek Harness (DSH) 界面美化插件 — 一键关键词生成整套主题�
 - **AI 头像图标**：上传的图标用作 AI 回复头像与页面 Logo。
 - **效果持久化**：所有设置保存在浏览器 localStorage，刷新不丢失；支持一键重置。
 
-## 📦 安装（部署级插件，开机自启）
+## 📦 两种安装方式（二选一）
 
-### 1. 拷贝插件包
+### 方式 A：部署级插件（开机自启，推荐长期使用）
+
+#### 1. 拷贝插件包
 
 将本仓库的 `dsh-beautify` 文件夹拷贝到 DSH 配置目录的依赖位置：
 
@@ -23,7 +25,7 @@ DeepSeek Harness (DSH) 界面美化插件 — 一键关键词生成整套主题�
 
 > 例如：`C:\Users\<你>\.dsh\profiles\web\node_modules\@local\dsh-beautify\`
 
-### 2. 注册到 patch 配置
+#### 2. 注册到 patch 配置
 
 编辑同目录下的 `cordis.patch.yml`，在**顶层列表**追加（参考仓库内的 `cordis.patch.example.yml`）：
 
@@ -35,9 +37,20 @@ DeepSeek Harness (DSH) 界面美化插件 — 一键关键词生成整套主题�
 
 > ⚠️ 必须是顶层 `insert`（不要带 `id` 字段），否则 patch 会因找不到同名分组而被静默跳过。
 
-### 3. 重启 DSH
+#### 3. 重启 DSH
 
 重启后插件自动加载，侧边栏底部出现「✨ 美化」入口，无需手动运行。
+
+### 方式 B：动态插件（快速体验 / 二开，无需改配置）
+
+无需拷贝文件、无需修改 `cordis.patch.yml`、无需重启 —— 在当前会话里用 `cordis_define` + `cordis_run` 直接运行：
+
+1. 打开 [`dynamic/`](./dynamic/) 目录
+2. 把 [`dynamic/host.js`](./dynamic/host.js) 粘贴到 `cordis_define` 的 `code.host`
+3. 把 [`dynamic/client.js`](./dynamic/client.js) 粘贴到 `code.client`
+4. `cordis_run` 运行并批准
+
+设置入口为 **设置 → 界面美化·动态版**。⚠️ 动态插件只存在于进程内存，DSH 重启后需重新运行（与部署版互补，详见 [`dynamic/README.md`](./dynamic/README.md)）。
 
 ## 🛠 前置要求
 
