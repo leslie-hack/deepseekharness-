@@ -82,7 +82,9 @@ return {
     }
 
     const BING_SCRIPT = `const kw = process.argv[1] || 'wallpaper';
-const url = 'https://www.bing.com/images/search?q=' + encodeURIComponent(kw) + '&first=0&count=30&mkt=zh-CN';
+const page = Number(process.argv[2] || 0);
+const first = Math.max(0, page) * 30;
+const url = 'https://www.bing.com/images/search?q=' + encodeURIComponent(kw) + '&first=' + first + '&count=30&mkt=zh-CN';
 fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' } })
   .then(r => r.text())
   .then(h => {
@@ -102,12 +104,12 @@ fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)
   })
   .catch(e => { console.log('[]'); });`
 
-    async function bingWallpapers(keyword) {
+    async function bingWallpapers(keyword, page) {
       try {
         const nodePath = await sub.resolveExecutable('node')
         const cwd = (sandboxPolicy && sandboxPolicy.workspaceRoot) || '.'
         const handle = sub.spawn({
-          argv: [nodePath, '-e', BING_SCRIPT, keyword],
+          argv: [nodePath, '-e', BING_SCRIPT, keyword, String(page || 0)],
           cwd: cwd,
           stdio: {
             stdin: 'ignore',
@@ -130,22 +132,25 @@ fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)
     harness.handle('bfy-search', async (args) => {
       const keyword = String((args && args.q) || '').trim()
       if (!keyword) return { ok: false, reason: 'empty' }
+      const page = Math.max(0, Number((args && args.page) || 0) | 0)
       const def = matchTheme(keyword)
       const t = def || makeGenerated(keyword)
       const tokens = buildTokens(t)
       const searchKw = def ? def.en + ' wallpaper' : keyword + ' 壁纸'
       let candidates = []
       try {
-        candidates = await bingWallpapers(searchKw)
+        candidates = await bingWallpapers(searchKw, page)
       } catch (e) { /* 搜索失败 */ }
-      const fallback = [
-        'https://loremflickr.com/1920/1080/' + encodeURIComponent(searchKw + ',wallpaper'),
-        'https://picsum.photos/seed/' + encodeURIComponent(searchKw) + '/1920/1080',
-      ]
-      for (const u of fallback) {
-        if (candidates.indexOf(u) < 0) candidates.push(u)
+      if (page === 0) {
+        const fallback = [
+          'https://loremflickr.com/1920/1080/' + encodeURIComponent(searchKw + ',wallpaper'),
+          'https://picsum.photos/seed/' + encodeURIComponent(searchKw) + '/1920/1080',
+        ]
+        for (const u of fallback) {
+          if (candidates.indexOf(u) < 0) candidates.push(u)
+        }
       }
-      return { ok: true, label: t.label, tokens, candidates: candidates.slice(0, 20) }
+      return { ok: true, label: t.label, tokens, page, hasMore: candidates.length >= 10, candidates: candidates.slice(0, 20) }
     })
 
     console.log('[beautify-dynamic] host half active')

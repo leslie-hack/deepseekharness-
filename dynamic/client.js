@@ -611,9 +611,9 @@ return {
       }
       next()
     }
-    async function fetchTheme(keyword) {
+    async function fetchTheme(keyword, page) {
       try {
-        const res = await host.call('bfy-search', { q: keyword })
+        const res = await host.call('bfy-search', { q: keyword, page: page || 0 })
         return (res && typeof res === 'object') ? res : { ok: false, reason: 'bad response' }
       } catch (e) {
         return { ok: false, reason: String((e && e.message) || e) }
@@ -737,14 +737,16 @@ return {
         const err = React.useState('')
         const urlIn = React.useState('')
         const probing = React.useState(false)
+        const pageState = React.useState(0)
 
         const onGenerate = async function () {
           const k = kw[0].trim()
           if (!k || busy[0]) return
+          pageState[1](0)
           busy[1](true)
           err[1]('')
           probing[1](false)
-          const res = await fetchTheme(k)
+          const res = await fetchTheme(k, 0)
           if (res && res.ok) {
             generated = res
             generated.wallpaperUrl = null
@@ -761,6 +763,71 @@ return {
           } else {
             generated = null
             err[1]((res && res.reason) || '生成失败')
+          }
+          busy[1](false)
+          emitChange()
+        }
+
+        const onNextPage = async function () {
+          if (!generated || busy[0] || !generated.label) return
+          const next = (pageState[0] || 0) + 1
+          busy[1](true)
+          err[1]('')
+          probing[1](true)
+          const res = await fetchTheme(kw[0].trim() || generated.label, next)
+          if (res && res.ok) {
+            pageState[1](next)
+            generated.page = next
+            generated.hasMore = res.hasMore !== false
+            const cands = (res.candidates || []).filter(function (u) { return !!u })
+            generated.wallpaperUrl = null
+            if (cands.length) {
+              probeAllLoadable(cands, function (okList) {
+                generated.loadable = okList
+                generated.wallpaperUrl = okList.length ? okList[0] : null
+                probing[1](false)
+                emitChange()
+              })
+            } else {
+              generated.loadable = []
+              probing[1](false)
+              err[1]('该页没有更多图片')
+            }
+          } else {
+            probing[1](false)
+            err[1]((res && res.reason) || '下一页加载失败')
+          }
+          busy[1](false)
+          emitChange()
+        }
+
+        const onPrevPage = async function () {
+          if (!generated || busy[0]) return
+          const prev = Math.max(0, (pageState[0] || 0) - 1)
+          busy[1](true)
+          err[1]('')
+          probing[1](true)
+          const res = await fetchTheme(kw[0].trim() || generated.label, prev)
+          if (res && res.ok) {
+            pageState[1](prev)
+            generated.page = prev
+            generated.hasMore = res.hasMore !== false
+            const cands = (res.candidates || []).filter(function (u) { return !!u })
+            generated.wallpaperUrl = null
+            if (cands.length) {
+              probeAllLoadable(cands, function (okList) {
+                generated.loadable = okList
+                generated.wallpaperUrl = okList.length ? okList[0] : null
+                probing[1](false)
+                emitChange()
+              })
+            } else {
+              generated.loadable = []
+              probing[1](false)
+            }
+          } else {
+            probing[1](false)
+            err[1]((res && res.reason) || '上一页加载失败')
           }
           busy[1](false)
           emitChange()
@@ -972,6 +1039,8 @@ return {
               : React.createElement('div', { className: 'bfy-hint' }, '⚠ 未找到可加载的网络壁纸，可在壁纸工作室上传或粘贴 URL'),
             wallNodes.length ? React.createElement('div', { className: 'bfy-wall-grid' }, wallNodes) : null,
             React.createElement('div', { className: 'bfy-preview-actions' },
+              pageState[0] > 0 ? React.createElement('button', { className: 'bfy-btn bfy-btn-ghost', disabled: busy[0], onClick: onPrevPage }, '← 上一页') : null,
+              React.createElement('button', { className: 'bfy-btn bfy-btn-ghost', disabled: busy[0] || (s.generated && s.generated.hasMore === false), onClick: onNextPage }, busy[0] ? '加载中…' : ('下一页 · 第 ' + ((pageState[0] || 0) + 2) + ' 页')),
               React.createElement('button', { className: 'bfy-btn', onClick: function () { applyGenerated() } }, '应用主题配色 + 默认壁纸'),
               React.createElement('button', { className: 'bfy-btn bfy-btn-ghost', onClick: function () { generated = null; emitChange() } }, '放弃')
             )
