@@ -365,12 +365,10 @@ return {
           }
         }
         const p = (r && typeof r.panelOpacity === 'number') ? r.panelOpacity : 1
-        if (p < 1) {
-          const P = Math.round(p * 100)
-          const sfx = key
-          css += ':root{--bfy-l1-' + sfx + ':color-mix(in srgb,var(--dsw-alias-bg-layer-1) ' + P + '%,transparent) !important;--bfy-l2-' + sfx + ':color-mix(in srgb,var(--dsw-alias-bg-layer-2) ' + P + '%,transparent) !important;--bfy-ov-' + sfx + ':color-mix(in srgb,var(--dsw-alias-bg-overlay) ' + P + '%,transparent) !important;--bfy-sb-' + sfx + ':color-mix(in srgb,var(--dsw-specific-sidebar-fill) ' + P + '%,transparent) !important}'
-          css += sel + '{--dsw-alias-bg-layer-1:var(--bfy-l1-' + sfx + ') !important;--dsw-alias-bg-layer-2:var(--bfy-l2-' + sfx + ') !important;--dsw-alias-bg-overlay:var(--bfy-ov-' + sfx + ') !important;--dsw-specific-sidebar-fill:var(--bfy-sb-' + sfx + ') !important}'
-        }
+        const P = Math.round(Math.min(1, Math.max(0.15, p)) * 100)
+        const sfx = key
+        css += ':root{--bfy-l1-' + sfx + ':color-mix(in srgb,var(--dsw-alias-bg-layer-1) ' + P + '%,transparent) !important;--bfy-l2-' + sfx + ':color-mix(in srgb,var(--dsw-alias-bg-layer-2) ' + P + '%,transparent) !important;--bfy-ov-' + sfx + ':color-mix(in srgb,var(--dsw-alias-bg-overlay) ' + P + '%,transparent) !important;--bfy-sb-' + sfx + ':color-mix(in srgb,var(--dsw-specific-sidebar-fill) ' + P + '%,transparent) !important}'
+        css += sel + '{--dsw-alias-bg-layer-1:var(--bfy-l1-' + sfx + ') !important;--dsw-alias-bg-layer-2:var(--bfy-l2-' + sfx + ') !important;--dsw-alias-bg-overlay:var(--bfy-ov-' + sfx + ') !important;--dsw-specific-sidebar-fill:var(--bfy-sb-' + sfx + ') !important}'
       }
       if (!css) return
       try {
