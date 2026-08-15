@@ -93,7 +93,7 @@ return {
     const REGION_KEYS = ['base', 'sidebar', 'center', 'details']
     const REGION_NAMES = { base: '全局背景', sidebar: '侧边栏', center: '对话区', details: '详情区' }
     const PROBE_TIMEOUT_MS = 8000
-    const STORAGE_KEY = 'bfy-beautify-state-dyn'
+    const STORAGE_KEY = 'bfy-beautify-state'
     const SOURCE = 'beautify-dyn'
 
     let currentPreset = 'default'
