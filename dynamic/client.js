@@ -922,13 +922,7 @@ return {
             posButtons
           ),
           React.createElement('div', { className: 'bfy-studio-ctrl' },
-            React.createElement('span', { className: 'bfy-tag' }, '内容面板透明度（整体）'),
-            React.createElement('input', {
-              type: 'range', className: 'bfy-range', min: '0.25', max: '1', step: '0.05',
-              value: String(s.wallpaperOpacity),
-              onChange: function (e) { setOpacity(e.target.value) },
-            }),
-            React.createElement('span', { className: 'bfy-tag' }, Math.round(s.wallpaperOpacity * 100) + '%'),
+            React.createElement('span', { className: 'bfy-tag' }, '壁纸模式'),
             React.createElement('button', {
               className: 'bfy-btn bfy-btn-sm' + (s.wallpaperMode === 'behind' ? '' : ' bfy-btn-ghost'),
               onClick: function () { setMode('behind') },
@@ -938,7 +932,7 @@ return {
               onClick: function () { setMode('front') },
             }, '前景模式')
           ),
-          React.createElement('div', { className: 'bfy-hint' }, '图片透明度：只影响该区域壁纸图片（内容文字不受影响）；该区面板透明度：只让当前区域的内容面板变透明露出壁纸；整体：全部区域一起调。')
+          React.createElement('div', { className: 'bfy-hint' }, '图片透明度：只影响该区域壁纸图片（内容文字不受影响）；该区面板透明度：只让当前区域的内容面板变透明露出壁纸。')
         )
 
         const hueSection = React.createElement('div', { className: 'bfy-hue' },
