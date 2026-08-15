@@ -122,6 +122,7 @@ return {
       details: { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1, panelOpacity: 1 },
     }
     let backdropDisposer = null
+    let panelDisposer = null
     const listeners = new Set()
 
     function getState() {
@@ -213,6 +214,7 @@ return {
         const anyUrl = REGION_KEYS.some(function (k) { return regions[k] && regions[k].url })
         wallpaper = anyUrl ? { url: regions.base.url || regions.center.url || regions.sidebar.url || regions.details.url, opacity: wallpaperOpacity } : null
         syncBackdrop()
+        syncPanelOpacity()
         syncSendIcon()
         applyTokens(presetTokens(currentPreset))
         restored = true
@@ -238,6 +240,7 @@ return {
       for (const k of REGION_KEYS) regions[k] = { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1, panelOpacity: 1 }
       if (currentDisposer) { currentDisposer(); currentDisposer = null }
       if (backdropDisposer) { backdropDisposer(); backdropDisposer = null }
+      if (panelDisposer) { panelDisposer(); panelDisposer = null }
       if (sendIconDisposer) { sendIconDisposer(); sendIconDisposer = null }
       currentTokens = null
       emitChange()
@@ -341,7 +344,8 @@ return {
     }
     function cssVarRgba(name) {
       try {
-        const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+        const root = document.body || document.documentElement
+        const v = getComputedStyle(root).getPropertyValue(name).trim()
         if (!v) return null
         const probe = document.createElement('span')
         probe.style.color = v
@@ -350,6 +354,33 @@ return {
         if (!m) return null
         return { r: Number(m[1]), g: Number(m[2]), b: Number(m[3]), a: m[4] === undefined ? 1 : Number(m[4]) }
       } catch (e) { return null }
+    }
+    function syncPanelOpacity() {
+      if (panelDisposer) { panelDisposer(); panelDisposer = null }
+      const pairs = [
+        ['sidebar', '.pI_x6G_sidebarCol'],
+        ['center', '.pI_x6G_centerCol'],
+        ['details', '.pI_x6G_detailsCol'],
+      ]
+      const panelTokens = ['--dsw-alias-bg-layer-1', '--dsw-alias-bg-layer-2', '--dsw-alias-bg-overlay', '--dsw-specific-sidebar-fill']
+      let css = ''
+      for (const [key, sel] of pairs) {
+        const r = regions[key]
+        const p = (r && typeof r.panelOpacity === 'number') ? r.panelOpacity : 1
+        const P = Math.min(1, Math.max(0.15, p))
+        let over = ''
+        for (const tn of panelTokens) {
+          const base = cssVarRgba(tn)
+          if (!base) continue
+          const a = Math.min(1, base.a * P)
+          over += tn + ':rgba(' + base.r + ',' + base.g + ',' + base.b + ',' + a + ') !important;'
+        }
+        if (over) css += sel + '{' + over + '}'
+      }
+      if (!css) return
+      try {
+        panelDisposer = styles.insert(css)
+      } catch (e) { panelDisposer = null }
     }
     function syncBackdrop() {
       if (backdropDisposer) { backdropDisposer(); backdropDisposer = null }
@@ -367,7 +398,6 @@ return {
         ['center', '.pI_x6G_centerCol'],
         ['details', '.pI_x6G_detailsCol'],
       ]
-      const panelTokens = ['--dsw-alias-bg-layer-1', '--dsw-alias-bg-layer-2', '--dsw-alias-bg-overlay', '--dsw-specific-sidebar-fill']
       for (const [key, sel] of pairs) {
         const r = regions[key]
         if (r && r.url) {
@@ -377,16 +407,6 @@ return {
             css += sel + '::before{content:"";position:absolute;inset:0;background:var(--dsw-alias-bg-base);opacity:' + (1 - c.opacity) + ';z-index:0;pointer-events:none}'
           }
         }
-        const p = (r && typeof r.panelOpacity === 'number') ? r.panelOpacity : 1
-        const P = Math.min(1, Math.max(0.15, p))
-        let over = ''
-        for (const tn of panelTokens) {
-          const base = cssVarRgba(tn)
-          if (!base) continue
-          const a = Math.min(1, base.a * P)
-          over += tn + ':rgba(' + base.r + ',' + base.g + ',' + base.b + ',' + a + ') !important;'
-        }
-        if (over) css += sel + '{' + over + '}'
       }
       if (!css) return
       try {
@@ -494,6 +514,7 @@ return {
       if (!regions[key]) return
       regions[key].panelOpacity = Number(v)
       syncBackdrop()
+      syncPanelOpacity()
       emitChange()
     }
     function setWallpaperUrl(url) {
@@ -505,6 +526,7 @@ return {
       wallpaper = null
       for (const k of REGION_KEYS) regions[k] = { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1, panelOpacity: 1 }
       if (backdropDisposer) { backdropDisposer(); backdropDisposer = null }
+      syncPanelOpacity()
       applyTokens(currentTokens)
       emitChange()
     }
@@ -659,6 +681,7 @@ return {
     ctx.on('dispose', function () {
       if (currentDisposer) { currentDisposer(); currentDisposer = null }
       if (backdropDisposer) { backdropDisposer(); backdropDisposer = null }
+      if (panelDisposer) { panelDisposer(); panelDisposer = null }
       if (sendIconDisposer) { sendIconDisposer(); sendIconDisposer = null }
       if (styleDisposer) { styleDisposer(); styleDisposer = null }
       if (persistTimer) { persistTimer(); persistTimer = null }
