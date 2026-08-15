@@ -370,15 +370,15 @@ return {
     }
     function effectiveSendIcon() {
       if (!sendIconEnabled) return null
-      if (sendIconUrl) return sendIconUrl
-      return icon || null
+      return sendIconUrl || null
     }
     function syncSendIcon() {
       if (sendIconDisposer) { sendIconDisposer(); sendIconDisposer = null }
       const src = effectiveSendIcon()
       if (!src) return
       const css =
-        '.uV2eYG_primary[aria-label="发送消息"],.uV2eYG_primary[aria-label="Send message"]{background-image:url("' + src + '") !important;background-size:18px 18px !important;background-position:center !important;background-repeat:no-repeat !important}' +
+        '.uV2eYG_primary[aria-label="发送消息"],.uV2eYG_primary[aria-label="Send message"]{background-color:transparent !important;background-image:url("' + src + '") !important;background-size:22px 22px !important;background-position:center !important;background-repeat:no-repeat !important}' +
+        '.uV2eYG_primary[aria-label="发送消息"]:hover:not(:disabled),.uV2eYG_primary[aria-label="Send message"]:hover:not(:disabled){background-color:transparent !important;background-image:url("' + src + '") !important;background-size:22px 22px !important;background-position:center !important;background-repeat:no-repeat !important}' +
         '.uV2eYG_primary[aria-label="发送消息"] svg,.uV2eYG_primary[aria-label="Send message"] svg{display:none !important}'
       try {
         sendIconDisposer = styles.insert(css)
@@ -711,7 +711,7 @@ return {
           const f = e && e.target && e.target.files && e.target.files[0]
           if (!f) return
           readFileAsDataURL(f, function (url) {
-            if (url) { icon = url; syncSendIcon(); emitChange() }
+            if (url) { icon = url; emitChange() }
           })
         }
         const onSendIconFile = function (e) {
@@ -940,11 +940,11 @@ return {
             (s.sendIconEnabled && effectiveSendIcon()) ? React.createElement('span', { className: 'bfy-thumb', style: { backgroundImage: 'url("' + effectiveSendIcon() + '")' } }) : null
           ),
           s.sendIconEnabled ? React.createElement('div', { className: 'bfy-upload-row' },
-            React.createElement('label', { className: 'bfy-upload-label bfy-btn-sm' }, '上传发送键图标', React.createElement('input', { type: 'file', className: 'bfy-file', accept: 'image/*', onChange: onSendIconFile })),
-            React.createElement('button', { className: 'bfy-btn bfy-btn-sm bfy-btn-ghost', onClick: function () { sendIconUrl = null; syncSendIcon(); emitChange() } }, '跟随 AI 头像图标'),
+            React.createElement('label', { className: 'bfy-upload-label bfy-btn-sm' }, '上传发送键图标（独立于头像）', React.createElement('input', { type: 'file', className: 'bfy-file', accept: 'image/*', onChange: onSendIconFile })),
+            s.icon ? React.createElement('button', { className: 'bfy-btn bfy-btn-sm bfy-btn-ghost', onClick: function () { sendIconUrl = s.icon; syncSendIcon(); emitChange() } }, '复制当前头像图标') : null,
             s.sendIconUrl ? React.createElement('button', { className: 'bfy-btn bfy-btn-sm bfy-btn-ghost', onClick: function () { sendIconEnabled = false; sendIconUrl = null; syncSendIcon(); emitChange() } }, '关闭发送键图标') : null
           ) : null,
-          React.createElement('div', { className: 'bfy-hint' }, s.sendIconEnabled ? '发送键将显示为你上传的图标；默认跟随 AI 头像图标，可上传独立图标。' : '开启后发送键由默认箭头替换为你上传的图标。')
+          React.createElement('div', { className: 'bfy-hint' }, '发送键图标完全独立：换 AI 头像不会影响它。可上传独立图标，或用「复制当前头像图标」一键采用当前头像。')
         )
 
         const resetSection = React.createElement('div', { className: 'bfy-upload' },
