@@ -116,10 +116,10 @@ return {
     let sendIconUrl = null
     let sendIconDisposer = null
     const regions = {
-      base: { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1 },
-      sidebar: { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1 },
-      center: { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1 },
-      details: { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1 },
+      base: { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1, panelOpacity: 1 },
+      sidebar: { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1, panelOpacity: 1 },
+      center: { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1, panelOpacity: 1 },
+      details: { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1, panelOpacity: 1 },
     }
     let backdropDisposer = null
     const listeners = new Set()
@@ -197,6 +197,7 @@ return {
                 scale: typeof r.scale === 'number' ? r.scale : 100,
                 pos: r.pos || 'center',
                 opacity: typeof r.opacity === 'number' ? r.opacity : 1,
+                panelOpacity: typeof r.panelOpacity === 'number' ? r.panelOpacity : 1,
               }
             }
           }
@@ -234,7 +235,7 @@ return {
       generated = null
       sendIconEnabled = false
       sendIconUrl = null
-      for (const k of REGION_KEYS) regions[k] = { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1 }
+      for (const k of REGION_KEYS) regions[k] = { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1, panelOpacity: 1 }
       if (currentDisposer) { currentDisposer(); currentDisposer = null }
       if (backdropDisposer) { backdropDisposer(); backdropDisposer = null }
       if (sendIconDisposer) { sendIconDisposer(); sendIconDisposer = null }
@@ -350,17 +351,22 @@ return {
         }
       }
       const pairs = [
-        ['sidebar', '.pI_x6G_sidebarCol'],
-        ['center', '.pI_x6G_centerCol'],
-        ['details', '.pI_x6G_detailsCol'],
+        ['sidebar', '.pI_x6G_sidebarCol', '--dsw-specific-sidebar-fill'],
+        ['center', '.pI_x6G_centerCol', '--dsw-alias-bg-base'],
+        ['details', '.pI_x6G_detailsCol', '--dsw-alias-bg-base'],
       ]
-      for (const [key, sel] of pairs) {
+      for (const [key, sel, token] of pairs) {
         const r = regions[key]
-        if (!r || !r.url) continue
-        const c = regionCss(r)
-        css += sel + '{position:relative;background-image:url("' + r.url + '") !important;background-size:' + c.size + ' !important;background-position:' + c.pos + ' !important;background-repeat:no-repeat !important}'
-        if (c.opacity < 1) {
-          css += sel + '::before{content:"";position:absolute;inset:0;background:var(--dsw-alias-bg-base);opacity:' + (1 - c.opacity) + ';z-index:0;pointer-events:none}'
+        const p = (r && typeof r.panelOpacity === 'number') ? r.panelOpacity : 1
+        if (r && r.url) {
+          const c = regionCss(r)
+          css += sel + '{position:relative;background-image:url("' + r.url + '") !important;background-size:' + c.size + ' !important;background-position:' + c.pos + ' !important;background-repeat:no-repeat !important}'
+          if (c.opacity < 1) {
+            css += sel + '::before{content:"";position:absolute;inset:0;background:var(--dsw-alias-bg-base);opacity:' + (1 - c.opacity) + ';z-index:0;pointer-events:none}'
+          }
+        }
+        if (p < 1) {
+          css += sel + '{background-color:color-mix(in srgb,var(' + token + ') ' + Math.round(p * 100) + '%,transparent) !important}'
         }
       }
       if (!css) return
@@ -465,6 +471,12 @@ return {
       syncBackdrop()
       emitChange()
     }
+    function setRegionPanelOpacity(key, v) {
+      if (!regions[key]) return
+      regions[key].panelOpacity = Number(v)
+      syncBackdrop()
+      emitChange()
+    }
     function setWallpaperUrl(url) {
       const u = String(url || '').trim()
       if (!u) return
@@ -472,7 +484,7 @@ return {
     }
     function clearWallpaper() {
       wallpaper = null
-      for (const k of REGION_KEYS) regions[k] = { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1 }
+      for (const k of REGION_KEYS) regions[k] = { url: null, fit: 'cover', scale: 100, pos: 'center', opacity: 1, panelOpacity: 1 }
       if (backdropDisposer) { backdropDisposer(); backdropDisposer = null }
       applyTokens(currentTokens)
       emitChange()
@@ -825,6 +837,15 @@ return {
             React.createElement('span', { className: 'bfy-tag' }, Math.round((curRegion.opacity === undefined ? 1 : curRegion.opacity) * 100) + '%')
           ),
           React.createElement('div', { className: 'bfy-studio-ctrl' },
+            React.createElement('span', { className: 'bfy-tag' }, '该区面板透明度'),
+            React.createElement('input', {
+              type: 'range', className: 'bfy-range', min: '0.15', max: '1', step: '0.05',
+              value: String(curRegion.panelOpacity === undefined ? 1 : curRegion.panelOpacity),
+              onChange: function (e) { setRegionPanelOpacity(s.activeRegion, e.target.value) },
+            }),
+            React.createElement('span', { className: 'bfy-tag' }, Math.round((curRegion.panelOpacity === undefined ? 1 : curRegion.panelOpacity) * 100) + '%')
+          ),
+          React.createElement('div', { className: 'bfy-studio-ctrl' },
             React.createElement('span', { className: 'bfy-tag' }, '大小'),
             fitButtons,
             curRegion.fit === 'scale' ? React.createElement('input', {
@@ -855,7 +876,7 @@ return {
               onClick: function () { setMode('front') },
             }, '前景模式')
           ),
-          React.createElement('div', { className: 'bfy-hint' }, '图片透明度：只影响该区域壁纸图片（内容文字不受影响）；内容面板透明度：整体内容层深浅。')
+          React.createElement('div', { className: 'bfy-hint' }, '图片透明度：只影响该区域壁纸图片（内容文字不受影响）；该区面板透明度：只让当前区域的内容面板变透明露出壁纸；整体：全部区域一起调。')
         )
 
         const hueSection = React.createElement('div', { className: 'bfy-hue' },

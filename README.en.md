@@ -16,7 +16,7 @@ A UI beautification plugin for **DeepSeek Harness (DSH)** — generate a complet
 
 - **Keyword → full theme**: type "Minecraft", "Gundam", "starry night"… and get a complete color theme. 14 built-in themes (Minecraft / Gundam / Evangelion / Cyberpunk / Dark / Starry Night / Sakura / Forest / Ocean / Sunset / Mint / Vaporwave / Neon / Midnight); any other keyword generates a hash-based color scheme.
 - **Bing wallpaper search**: keyword-related wallpapers are scraped from Bing image search and shown as a candidate list (server-side `node` subprocess scraping; the client probes each image's loadability).
-- **Per-region wallpaper studio**: 4 regions — full background / sidebar / chat column / details column — each with its own image, opacity, size, and position; paste an image URL or upload a local image (icon or wallpaper).
+- **Per-region wallpaper studio**: 4 regions — full background / sidebar / chat column / details column — each with its own image, opacity, size, and position; each region also has an **independent content-panel opacity** (transparent panels that reveal the wallpaper in just that region); paste an image URL or upload a local image (icon or wallpaper).
 - **Hue slider custom colors**: drag to preview a complete theme in real time; save it as a preset.
 - **AI avatar icon**: an uploaded icon is used as the AI reply avatar and the page logo.
 - **Send-button icon**: the uploaded icon (or a dedicated one) can replace the default send arrow in the composer — one-click toggle.
