@@ -134,18 +134,26 @@ fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)
       const t = def || makeGenerated(keyword)
       const tokens = buildTokens(t)
       const searchKw = def ? def.en + ' wallpaper' : keyword + ' 壁纸'
-      let candidates = []
+      const candidates = []
       try {
-        candidates = await bingWallpapers(searchKw)
+        const bing = await bingWallpapers(searchKw)
+        for (const u of bing) {
+          if (candidates.indexOf(u) < 0) candidates.push(u)
+        }
       } catch (e) { /* 搜索失败 */ }
-      const fallback = [
-        'https://loremflickr.com/1920/1080/' + encodeURIComponent(searchKw + ',wallpaper'),
-        'https://picsum.photos/seed/' + encodeURIComponent(searchKw) + '/1920/1080',
-      ]
-      for (const u of fallback) {
+      const tag = encodeURIComponent(searchKw.replace(/[^\w\u4e00-\u9fa5]+/g, ','))
+      const lf = []
+      for (const [w, h] of [[1920, 1080], [1600, 900], [2560, 1440], [1280, 800], [1920, 1200], [1680, 1050]]) {
+        lf.push('https://loremflickr.com/' + w + '/' + h + '/' + tag)
+      }
+      const ps = []
+      for (let i = 0; i < 4; i++) {
+        ps.push('https://picsum.photos/seed/' + encodeURIComponent(searchKw) + '-' + i + '/1920/1080')
+      }
+      for (const u of [...lf, ...ps]) {
         if (candidates.indexOf(u) < 0) candidates.push(u)
       }
-      return { ok: true, label: t.label, tokens, candidates: candidates.slice(0, 40), hasMore: candidates.length > 10 }
+      return { ok: true, label: t.label, tokens, candidates: candidates.slice(0, 50), hasMore: candidates.length > 10 }
     })
 
     console.log('[beautify-dynamic] host half active')
