@@ -123,7 +123,6 @@ return {
     }
     let backdropDisposer = null
     let panelDisposer = null
-    let panelDebug = ''
     const listeners = new Set()
 
     function getState() {
@@ -132,7 +131,6 @@ return {
         wallpaperOpacity: wallpaperOpacity, icon: icon, activeRegion: activeRegion, regions: regions,
         hueValue: hueValue, savedPresets: savedPresets, restored: restored,
         sendIconEnabled: sendIconEnabled, sendIconUrl: sendIconUrl,
-        panelDebug: panelDebug,
       }
     }
     function subscribe(fn) {
@@ -364,9 +362,7 @@ return {
     function syncPanelOpacity() {
       if (panelDisposer) { panelDisposer(); panelDisposer = null }
       const bgBase = cssVarRgba('--dsw-alias-bg-base')
-      const bubble = cssVarRgba('--dsw-specific-bubble')
       let css = ''
-      let dbg = []
       const addRgba = function (color, alpha) {
         if (!color) return ''
         return 'rgba(' + color.r + ',' + color.g + ',' + color.b + ',' + Math.min(1, Math.max(0, alpha)) + ')'
@@ -386,16 +382,11 @@ return {
           if (!base) continue
           over += tn + ':' + addRgba(base, base.a * P) + ' !important;'
         }
-        if (over) {
-          css += meta.sel + '{' + over + '}'
-          dbg.push(meta.key + '→' + over.slice(0, 60))
-        }
+        if (over) css += meta.sel + '{' + over + '}'
         if (meta.extra && bgBase && P < 1) {
           css += meta.extra + '{background-color:' + addRgba(bgBase, bgBase.a * P) + ' !important}'
-          dbg.push(meta.key + '(bubble)→' + addRgba(bgBase, bgBase.a * P))
         }
       }
-      panelDebug = 'bgBase=' + (bgBase ? addRgba(bgBase, 1) : 'NULL') + ' bubble=' + (bubble ? addRgba(bubble, 1) : 'NULL') + ' | ' + dbg.join(' ; ')
       if (!css) return
       try {
         panelDisposer = styles.insert(css)
@@ -906,7 +897,6 @@ return {
             }),
             React.createElement('span', { className: 'bfy-tag' }, Math.round((curRegion.panelOpacity === undefined ? 1 : curRegion.panelOpacity) * 100) + '%')
           ),
-          s.panelDebug ? React.createElement('div', { className: 'bfy-hint', style: { fontFamily: 'monospace', fontSize: '11px' } }, '诊断: ' + s.panelDebug) : null,
           React.createElement('div', { className: 'bfy-studio-ctrl' },
             React.createElement('span', { className: 'bfy-tag' }, '大小'),
             fitButtons,
