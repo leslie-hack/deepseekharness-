@@ -376,9 +376,11 @@ return {
       if (sendIconDisposer) { sendIconDisposer(); sendIconDisposer = null }
       const src = effectiveSendIcon()
       if (!src) return
+      const base =
+        '{background-color:transparent !important;background-image:url("' + src + '") !important;background-size:cover !important;background-position:center !important;background-repeat:no-repeat !important;-webkit-mask-image:radial-gradient(circle,#000 100%,transparent 100%) !important;mask-image:radial-gradient(circle,#000 100%,transparent 100%) !important}'
       const css =
-        '.uV2eYG_primary[aria-label="发送消息"],.uV2eYG_primary[aria-label="Send message"]{background-color:transparent !important;background-image:url("' + src + '") !important;background-size:22px 22px !important;background-position:center !important;background-repeat:no-repeat !important}' +
-        '.uV2eYG_primary[aria-label="发送消息"]:hover:not(:disabled),.uV2eYG_primary[aria-label="Send message"]:hover:not(:disabled){background-color:transparent !important;background-image:url("' + src + '") !important;background-size:22px 22px !important;background-position:center !important;background-repeat:no-repeat !important}' +
+        '.uV2eYG_primary[aria-label="发送消息"],.uV2eYG_primary[aria-label="Send message"]' + base +
+        '.uV2eYG_primary[aria-label="发送消息"]:hover:not(:disabled),.uV2eYG_primary[aria-label="Send message"]:hover:not(:disabled)' + base +
         '.uV2eYG_primary[aria-label="发送消息"] svg,.uV2eYG_primary[aria-label="Send message"] svg{display:none !important}'
       try {
         sendIconDisposer = styles.insert(css)
