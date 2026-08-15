@@ -357,25 +357,31 @@ return {
     }
     function syncPanelOpacity() {
       if (panelDisposer) { panelDisposer(); panelDisposer = null }
-      const pairs = [
-        ['sidebar', '.pI_x6G_sidebarCol'],
-        ['center', '.pI_x6G_centerCol'],
-        ['details', '.pI_x6G_detailsCol'],
-      ]
-      const panelTokens = ['--dsw-alias-bg-layer-1', '--dsw-alias-bg-layer-2', '--dsw-alias-bg-overlay', '--dsw-specific-sidebar-fill']
+      const bgBase = cssVarRgba('--dsw-alias-bg-base')
       let css = ''
-      for (const [key, sel] of pairs) {
-        const r = regions[key]
+      const addRgba = function (color, alpha) {
+        if (!color) return ''
+        return 'rgba(' + color.r + ',' + color.g + ',' + color.b + ',' + Math.min(1, Math.max(0, alpha)) + ')'
+      }
+      const regionsMeta = [
+        { key: 'sidebar', sel: '.pI_x6G_sidebarCol', tokens: ['--dsw-alias-bg-base', '--dsw-specific-sidebar-fill'], extra: '' },
+        { key: 'center', sel: '.pI_x6G_centerCol', tokens: ['--dsw-alias-bg-base'], extra: '.wSkVaW_root,.gdEzaW_bubble,.oRe1gG_bubble' },
+        { key: 'details', sel: '.pI_x6G_detailsCol', tokens: ['--dsw-alias-bg-base'], extra: '' },
+      ]
+      for (const meta of regionsMeta) {
+        const r = regions[meta.key]
         const p = (r && typeof r.panelOpacity === 'number') ? r.panelOpacity : 1
         const P = Math.min(1, Math.max(0.15, p))
         let over = ''
-        for (const tn of panelTokens) {
+        for (const tn of meta.tokens) {
           const base = cssVarRgba(tn)
           if (!base) continue
-          const a = Math.min(1, base.a * P)
-          over += tn + ':rgba(' + base.r + ',' + base.g + ',' + base.b + ',' + a + ') !important;'
+          over += tn + ':' + addRgba(base, base.a * P) + ' !important;'
         }
-        if (over) css += sel + '{' + over + '}'
+        if (over) css += meta.sel + '{' + over + '}'
+        if (meta.extra && bgBase && P < 1) {
+          css += meta.extra + '{background-color:' + addRgba(bgBase, bgBase.a * P) + ' !important}'
+        }
       }
       if (!css) return
       try {
